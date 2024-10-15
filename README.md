@@ -1,3 +1,14 @@
+TorchUtils
+
+
+
+# Disclaimer
+
+This is not an official project from Intel. If you have any problems, feel free to reach out me by [email](yi4.liu@intel.com) or open an issue.
+
+
+--------------------------------------------------------------
+
 # Python Project Template
 
 This project is a template for creating Python projects that follows the Python Standards declared in PEP 621. It uses a pyproject.yaml file to configure the project and Flit to simplify the build process and publish to PyPI. Flit simplifies the build and packaging process for Python projects by eliminating the need for separate setup.py and setup.cfg files. With Flit, you can manage all relevant configurations within the pyproject.toml file, streamlining development and promoting maintainability by centralizing project metadata, dependencies, and build specifications in one place.
