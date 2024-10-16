@@ -26,8 +26,15 @@ build_dist_install_tools:
 	pip install build
 	pip install twine
 
+prepare: style test
+	echo "All checks passed. Ready to push."
+
+push: prepare
+	git push origin main:main
+
 build_dist:
 	rm -fr build
 	rm -fr dist
 	python -m build
 
+.PHONY : build_dist_install_tools prepare push build_dist
