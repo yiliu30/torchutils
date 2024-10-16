@@ -22,14 +22,13 @@ def bench_module(func, warmup=25, rep=200):
     start = time.perf_counter()
     for i in range(rep):
         func()
-        torch.cuda.synchronize()
+    torch.cuda.synchronize()
     end = time.perf_counter()
     return (end - start) / rep * 1000
 
 
 @torch.no_grad()
 def bench_more(func, warmup=25, rep=200, kernel=True, profile=True, msg="", export_trace=False):
-    from triton.testing import do_bench
     import torch
 
     module_bench_time = bench_module(func, warmup, rep)
@@ -66,8 +65,6 @@ def see_memory_usage(message, force=True):
     import warnings
 
     import torch.distributed as dist
-
-    breakpoint()
 
     if not force:
         return

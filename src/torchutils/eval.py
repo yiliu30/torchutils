@@ -1,7 +1,8 @@
 # Adapted from https://github.com/mobiusml/hqq/blob/master/examples/llama2_benchmark/eval_model.py
 
 from datasets import load_dataset
-import torch, time
+import torch
+import time
 import numpy as np
 from tqdm import tqdm
 
