@@ -9,3 +9,6 @@ __version__ = "0.0.2"
 
 
 from torchutils.bench import bench_module, bench_more, inspect_tensor, see_memory_usage
+
+
+from torchutils.freeze import freeze_seed

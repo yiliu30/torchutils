@@ -9,21 +9,9 @@ from triton.testing import do_bench
 import torch
 import time
 
+from torchutils.freeze import freeze_seed
 
-def freeze_seed(seed):
-    import random
-
-    random.seed(seed)
-    import torch
-
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    import numpy as np
-
-    np.random.seed(seed)
-
-
-freeze_seed(seed)
+freeze_seed()
 
 
 def bench_module(func, warmup=25, rep=200):
@@ -78,6 +66,7 @@ def see_memory_usage(message, force=True):
     import warnings
 
     import torch.distributed as dist
+
     breakpoint()
 
     if not force:
