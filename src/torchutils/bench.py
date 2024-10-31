@@ -10,9 +10,45 @@ import torch
 import time
 
 from torchutils.freeze import freeze_seed
+from torchutils.config import bench_config
+from collections import defaultdict
+import functools
 
 freeze_seed()
 
+
+execution_records = defaultdict(list)
+
+def dump_elapsed_time(customized_msg="", record=False, record_only=False):
+    """Get the elapsed time for decorated functions.
+
+    Args:
+        customized_msg (string, optional): The parameter passed to decorator. Defaults to None.
+    """
+    
+
+    def f(func):
+        @functools.wraps(func)
+        def fi(*args, **kwargs):
+            start = time.time()
+            res = func(*args, **kwargs)
+            end = time.time()
+            dur = round((end - start) * 1000, 2)
+            if record:
+                execution_records[customized_msg if customized_msg else func.__qualname__].append(dur)
+            if not record_only:
+                print(
+                    "%s elapsed time: %s ms"
+                    % (
+                        customized_msg if customized_msg else func.__qualname__,
+                        dur,
+                    )
+                )
+            return res
+
+        return fi
+
+    return f
 
 def bench_module(func, warmup=25, rep=200):
     torch.cuda.synchronize()
@@ -38,10 +74,11 @@ def bench_more(func, warmup=25, rep=200, kernel=True, profile=True, msg="", expo
         from torch.profiler import profile, record_function, ProfilerActivity
 
         activities = [ProfilerActivity.CPU, ProfilerActivity.CUDA]
-        with profile(activities=activities, with_stack=True, use_cuda=True) as prof:
+        with profile(activities=activities, with_stack=True) as prof:
             for i in range(rep):
                 func()
-        if export_trace or os.environ.get("EXPORT_TRACE", "0") == "1":
+                prof.step()
+        if export_trace or bench_config.EXPORT_TRACE:
             prof.export_chrome_trace(f"{msg}.json")
             print(f"Exported trace to {msg}.json")
         print("----" * 10, "CPU time", "----" * 10)
