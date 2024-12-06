@@ -16,7 +16,7 @@ def cleanup():
     gc.collect()
 
 
-def eval_wikitext2(model, tokenizer, max_length=1024, stride=512, verbose=True, limit=100):
+def eval_wikitext2(model, tokenizer, max_length=1024, stride=512, verbose=True, limit=100, past_key_values=None):
     model.eval()
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.padding_side = "right"
@@ -33,6 +33,10 @@ def eval_wikitext2(model, tokenizer, max_length=1024, stride=512, verbose=True, 
         if cnt > limit:
             break
         cnt += 1
+        # FIXME: for static kv cache
+        if past_key_values is not None and hasattr(past_key_values, "reset"):
+            past_key_values.reset()
+        # cache_position = torch.arange(i, i + stride, device=model.device)
         begin_loc = max(i + stride - max_length, 0)
         end_loc = min(i + stride, encodings["input_ids"].size(1))
         trg_len = end_loc - i
@@ -42,7 +46,14 @@ def eval_wikitext2(model, tokenizer, max_length=1024, stride=512, verbose=True, 
 
         t1 = time.time()
         with torch.no_grad():
-            log_likelihood = model(input_ids, labels=target_ids).loss * trg_len
+            log_likelihood = (
+                model(
+                    input_ids,
+                    labels=target_ids,
+                    past_key_values=past_key_values,
+                ).loss
+                * trg_len
+            )
         # torch.cuda.synchronize()
         log_likelihood = log_likelihood.cpu()
         t2 = time.time()

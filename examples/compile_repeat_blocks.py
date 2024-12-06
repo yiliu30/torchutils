@@ -3,7 +3,8 @@
 
 """
 This feature is available starting with the 2.5 release.
-If you are using version 2.4, you can enable the configuration flag torch._dynamo.config.inline_inbuilt_nn_modules=True to prevent recompilations during regional compilation.
+If you are using version 2.4, you can enable the configuration flag 
+torch._dynamo.config.inline_inbuilt_nn_modules=True to prevent recompilations during regional compilation.
 In version 2.5, this flag is enabled by default.
 """
 
@@ -30,14 +31,14 @@ class Layer(torch.nn.Module):
 
 
 class Model(torch.nn.Module):
-    def __init__(self, apply_regional_compilation):
+    def __init__(self, apply_regional_compilation, num_layers=64):
         super().__init__()
         self.linear = torch.nn.Linear(10, 10)
         # Apply compile only to the repeated layers.
         if apply_regional_compilation:
-            self.layers = torch.nn.ModuleList([torch.compile(Layer()) for _ in range(64)])
+            self.layers = torch.nn.ModuleList([torch.compile(Layer()) for _ in range(num_layers)])
         else:
-            self.layers = torch.nn.ModuleList([Layer() for _ in range(64)])
+            self.layers = torch.nn.ModuleList([Layer() for _ in range(num_layers)])
 
     def forward(self, x):
         # In regional compilation, the self.linear is outside of the scope of `torch.compile`.
@@ -47,6 +48,10 @@ class Model(torch.nn.Module):
         return x
 
 
+print(f"torch version: {torch.__version__}")
+print(f"torch._dynamo.config.inline_inbuilt_nn_modules: {torch._dynamo.config.inline_inbuilt_nn_modules}")
+torch._dynamo.config.inline_inbuilt_nn_modules = False
+print(f"torch._dynamo.config.inline_inbuilt_nn_modules: {torch._dynamo.config.inline_inbuilt_nn_modules}")
 model = Model(apply_regional_compilation=False).cuda()
 full_compiled_model = torch.compile(model)
 
@@ -65,6 +70,7 @@ def measure_latency(fn, input):
         return end - start
 
 
+# with torch.no_grad():
 input = torch.randn(10, 10, device="cuda")
 full_model_compilation_latency = measure_latency(full_compiled_model, input)
 print(f"Full model compilation time = {full_model_compilation_latency:.2f} seconds")
@@ -73,3 +79,12 @@ regional_compilation_latency = measure_latency(regional_compiled_model, input)
 print(f"Regional compilation time = {regional_compilation_latency:.2f} seconds")
 
 assert regional_compilation_latency < full_model_compilation_latency
+
+
+"""
+Full model compilation time = 10.72 seconds
+Regional compilation time = 1.59 seconds
+
+Full model compilation time = 5.91 seconds
+Regional compilation time = 0.76 seconds
+"""

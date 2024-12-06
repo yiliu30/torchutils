@@ -19,13 +19,13 @@ freeze_seed()
 
 execution_records = defaultdict(list)
 
+
 def dump_elapsed_time(customized_msg="", record=False, record_only=False):
     """Get the elapsed time for decorated functions.
 
     Args:
         customized_msg (string, optional): The parameter passed to decorator. Defaults to None.
     """
-    
 
     def f(func):
         @functools.wraps(func)
@@ -49,6 +49,7 @@ def dump_elapsed_time(customized_msg="", record=False, record_only=False):
         return fi
 
     return f
+
 
 def bench_module(func, warmup=25, rep=200):
     torch.cuda.synchronize()
