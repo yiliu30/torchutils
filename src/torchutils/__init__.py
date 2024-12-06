@@ -12,3 +12,10 @@ from torchutils.bench import bench_module, bench_more, inspect_tensor, see_memor
 
 
 from torchutils.freeze import freeze_seed
+
+
+def log_info():
+    import logging
+
+    logging.basicConfig(level=logging.INFO)
+    logging.info("Set logging level to INFO successfully")
