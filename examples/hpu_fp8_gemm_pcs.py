@@ -88,4 +88,5 @@ def test():
         diff = ref_res - res
         print(f"diff range {diff.min()} - {diff.max()}, mse {torch.mean(diff * diff)}")
 
-test()
+if __name__ == "__main__":
+    test()
