@@ -5,7 +5,7 @@ import torch
 import time
 import numpy as np
 from tqdm import tqdm
-
+from torchutils.utility import dump_elapsed_time
 import gc
 
 __all__ = ["eval_wikitext2"]
