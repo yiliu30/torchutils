@@ -40,7 +40,7 @@ def copy_other_files(input_path, output_path):
 
 
 # Use Case: Hunyuan_V1 Dense and MOE models
-def convert_files_per_tensor(input_path, output_path):
+def convert_files_per_tensor(input_path, output_path, args):
     all_safetensors = glob(f"{input_path}/*.safetensors")
     for safetensors_path in all_safetensors:
         print(f"processing {safetensors_path}")
@@ -59,6 +59,7 @@ def convert_files_per_tensor(input_path, output_path):
                     weight_nv = tensor_file.get_tensor(weight_name).float()
                     weight_fp32 = weight_scale_nv * weight_nv
                     weight_fp8, scale = quant_per_tensor(weight_fp32)
+                    print(f"Update weight {weight_name} and scale {k}")
                     tensors.update({k: scale})
                     tensors.update({weight_name: weight_fp8})
                 elif "proj.weight" in k:
@@ -70,7 +71,7 @@ def convert_files_per_tensor(input_path, output_path):
         save_file(tensors, new_tensor_path)
 
 
-def convert_files(input_path, output_path):
+def convert_files(input_path, output_path, args):
     all_safetensors = glob(f"{input_path}/*.safetensors")
     # sort by file name
     all_safetensors.sort()
@@ -82,7 +83,7 @@ def convert_files(input_path, output_path):
         ) as tensor_file:
             for k in tensor_file.keys():
                 tensor = tensor_file.get_tensor(k)
-                if "proj" in k:
+                if "proj" in k or ("mlp.gate" in k and args.quant_mlp_gate):
                     if k.endswith("weight"):
                         tensor = (tensor.float() * fp8_e4m3fnuz_max / fp8_e4m3fn_max).to(
                             torch.float8_e4m3fn
@@ -102,6 +103,7 @@ def convert_files(input_path, output_path):
                         raise NotImplementedError(f"Cannot covert {k}")
                 else:
                     print(f"skip {k}.")
+                print(f"update {k} to dtype {tensor.dtype}")
                 tensors[k] = tensor
         new_tensor_path = safetensors_path.replace(input_path, output_path)
         print(f"saving to {new_tensor_path}")
@@ -129,16 +131,23 @@ if __name__ == "__main__":
         help="Convert FP8 models using per tensor quantization for both input \
                 and weight scales. Default is per channel quantization for weight scale.",
     )
+    parser.add_argument(
+        "-g",
+        "--quant_mlp_gate",
+        action='store_true',
+        help="The model has quantized MLP gate projection weights.",
+    )
     args = parser.parse_args()
     input_path = args.input_path
     output_path = args.output_path
     per_tensor = args.per_tensor
-
+    if args.quant_mlp_gate:
+        print(f"!!! The model has quantized MLP gate projection weights !!!")
     # create output directory if it does not exist
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     copy_other_files(input_path, output_path)
     if per_tensor:
-        convert_files_per_tensor(input_path, output_path)
+        convert_files_per_tensor(input_path, output_path, args)
     else:
-        convert_files(input_path, output_path)
+        convert_files(input_path, output_path, args)
