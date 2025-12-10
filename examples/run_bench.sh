@@ -42,16 +42,16 @@ model_path="/home/yiliu7/workspace/models/deepseek-ai/Deepseek-v2-lite"
 # model_path=quantized_model_qwen_mxfp4
 # VLLM_LOGGING_LEVEL=DEBUG  \
 model_path="/storage/yiliu7/Yi30/Qwen2.5-0.5B-Instruct-FP8_STATIC-fp8-attn-ar-llmc"
+model_path="/storage/yiliu7/Qwen/Qwen2.5-0.5B/"
 # VLLM_MLA_DISABLE=1 \
 VLLM_TORCH_PROFILER_RECORD_SHAPES=1 \
 VLLM_TORCH_PROFILER_WITH_FLOPS=1 \
 VLLM_USE_DEEP_GEMM=0 \
 VLLM_FLASHINFER_DISABLE_Q_QUANTIZATION=1 \
-VLLM_TORCH_PROFILER_DIR=./vllm_profiler/Qwen2.5-0.5B-ar-llmc-kv-fp8-qbf16-2nd-prof \
+VLLM_TORCH_PROFILER_DIR=./vllm_profiler/Qwen2.5-0.5B-cc-backend-eager-2nd \
 VLLM_ENABLE_V1_MULTIPROCESSING=1 \
 vllm bench throughput \
   --model $model_path \
-  --enforce-eager \
   --dataset-name sonnet \
   --dataset-path /home/yiliu7/workspace/vllm/benchmarks/sonnet.txt \
   --num-prompts 32 \
@@ -59,9 +59,21 @@ vllm bench throughput \
   --input-len 64 \
   --tensor_parallel_size 1 \
   --output-len 32 \
-  --max_model_len 512 \
-  --kv_cache_dtype "fp8" \
-    --enforce-eager 
+  --max_model_len 512 
+#   -O  '{"backend":"eager"}'
+
+# vllm bench throughput \
+#   --model $model_path \
+#   --dataset-name sonnet \
+#   --dataset-path /home/yiliu7/workspace/vllm/benchmarks/sonnet.txt \
+#   --num-prompts 32 \
+#   --profile \
+#   --input-len 64 \
+#   --tensor_parallel_size 1 \
+#   --output-len 32 \
+#   --max_model_len 512 \
+#   -O  '{"backend":"eager"}'
+#   --compilation-config.mode "None"
   
 # #!/bin/bash
 
