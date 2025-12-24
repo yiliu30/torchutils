@@ -1,0 +1,1 @@
+ZE_AFFINITY_MASK=3 python bench_attn.py
